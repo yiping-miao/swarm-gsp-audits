@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+data/
+results_mock*.jsonl
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
