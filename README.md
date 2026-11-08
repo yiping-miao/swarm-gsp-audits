@@ -21,7 +21,7 @@ hackathon (November 7–8, 2026).
 
 | File | What it does |
 |---|---|
-| `submission/report.tex`, `submission/report.pdf` | **The hackathon submission** (7 pages of main text, plus references and appendices, including the required Limitations and Dual-Use appendix). Build from `submission/` with `pdflatex report.tex`, run twice; figures are read from the repository root. |
+| `submission/report.tex`, `submission/report.pdf` | **The hackathon submission** (6 pages of main text, plus references and appendices, including the required Limitations and Dual-Use appendix). Build from `submission/` with `pdflatex report.tex`, run twice; figures are read from the repository root. |
 | `main_revised.tex` | Extended working draft with full proofs inline. |
 | `experiments.py` | Main harness, experiments E1–E8 (threshold, stake/framing, team bonus, liability, noisy audits, jackpot, whistleblower, hidden q). Modes: `sim` (rational agents), `llm --mock` (full pipeline, no API calls, cost estimate), `llm` (real Claude agents). |
 | `hierarchy_sim.py` | Hierarchical auditing (AI auditors audited by AI, then humans): checks the detection formulas against Monte Carlo → `hierarchy.png`. |
