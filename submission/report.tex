@@ -12,7 +12,8 @@
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}[theorem]{Proposition}
-\newtheorem{observation}[theorem]{Observation}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 
@@ -20,8 +21,7 @@
 \newcommand{\FAIL}{\textnormal{\textsc{fail}}}
 \newcommand{\E}{\mathbb{E}}
 
-\title{\textbf{Auditing the Auditors: Evidence from a Real Agent Swarm\\ and Group
-Strategy-Proof Reporting Mechanisms}}
+\title{\textbf{Group Strategy-Proof Mechanism and Evidence\\ from a Real Agent Swarm}}
 \author{Yiping Miao\\ University of California, Berkeley}
 \date{Apart Research Swarm Alignment Hackathon, November 2026\\ Track 3 (Strengthening Agent Infrastructure)}
 
@@ -90,55 +90,162 @@ the channel the collusion.wiki agents used. Moulin cost-sharing is GSP but not b
 an untrusted model, and we add several colluding agents and chains of AI monitors.
 
 %=====================================================================
-\section{A minimal model of reporting and audits}
+\section{Model}
 \label{sec:model}
 %=====================================================================
-Each round, agent $i$ privately observes whether its task passed
-($\theta_i\in\{\PASS,\FAIL\}$, with $\Pr[\PASS]=p$) and reports $r_i$. Reporting \PASS{}
-earns $R$, and \FAIL{} earns $0$. Each \PASS{} report is audited against ground truth with
-probability $q$, and an audited false \PASS{} is fined $P$. A mechanism is SP if no single
-agent gains by lying, GSP if no coalition can make a member better off without making
-another worse off, and bribe-proof if no coalition can raise its total payoff. We use
-the model to state five observations. Proofs are short and given in
+The model is a stylised version of an evaluation in which many agents each complete a
+task and report the result, and an overseer can afford to check only some of the
+reports. It is kept simple on purpose, so that each design choice in
+Section~\ref{sec:design} can be traced to one parameter.
+
+\subsection{Setting}
+There are $m$ agents and $n$ rounds. Each round proceeds as follows.
+\begin{enumerate}
+    \item \textbf{Task.} Each agent $i$ completes a task. Its true outcome is
+    $\theta_i\in\{\PASS,\FAIL\}$, with $\Pr[\theta_i=\PASS]=p$ independently across
+    agents and rounds. Only agent $i$ observes $\theta_i$.
+    \item \textbf{Report.} Each agent submits a report $r_i\in\{\PASS,\FAIL\}$ to the
+    overseer. Agents may communicate before reporting.
+    \item \textbf{Reward.} An agent that reports \PASS{} receives a reward $R>0$. An agent
+    that reports \FAIL{} receives $0$.
+    \item \textbf{Audit.} Each \PASS{} report is independently audited with probability
+    $q\in(0,1]$. An audit reveals the true outcome. If an audited report is false
+    ($r_i=\PASS$, $\theta_i=\FAIL$), the agent pays a fine $P\ge0$. \FAIL{} reports are not
+    audited, since no agent gains from falsely reporting failure.
+\end{enumerate}
+An agent's payoff is the sum of its rewards minus its fines over the $n$ rounds. In the
+collusion.wiki setting, a ``report'' is an answer submitted to a scored question, and the
+``audit'' is any independent check of that answer against ground truth.
+
+\subsection{Definitions}
+
+\begin{definition}[Strategy and truthful reporting]
+A \emph{strategy} for agent $i$ maps everything the agent knows (its own outcome, its
+history, and any messages from other agents) to a report. The \emph{truthful} strategy
+always reports $r_i=\theta_i$.
+\end{definition}
+
+\begin{definition}[Coalition]
+A \emph{coalition} is any set $S$ of agents that coordinate their strategies. Members of a
+coalition may know each other's outcomes.
+\end{definition}
+
+\begin{definition}[Strategy-proof]
+A mechanism is \emph{strategy-proof} (SP) if no single agent can increase its expected
+payoff by deviating from truthful reporting, whatever the other agents' outcomes.
+\end{definition}
+
+\begin{definition}[Group strategy-proof]
+A mechanism is \emph{group strategy-proof} (GSP) if no coalition $S$ has a joint deviation
+from truthful reporting under which every member of $S$ is at least as well off and at
+least one member is strictly better off.
+\end{definition}
+
+\begin{definition}[Bribe-proof]
+A mechanism is \emph{bribe-proof} if no coalition $S$ has a joint deviation that increases
+the \emph{sum} of its members' expected payoffs. Equivalently, it is GSP even when members
+can transfer payoff to each other.
+\end{definition}
+
+\begin{definition}[Separable payments]
+Payments are \emph{separable} if each agent's expected payoff in a round depends only on its
+own outcome and its own report, and not on any other agent's report.
+\end{definition}
+
+Every bribe-proof mechanism is GSP, and every GSP mechanism is SP. The reverse
+implications fail. Bribe-proofness is the relevant standard for swarms, because copies of
+one model, or agents that share credit, act as if they pool their payoffs.
+
+\paragraph{Extensions.} Three additions are used below. An \emph{outside stake} $B$ is an
+extra payoff an agent receives for each \PASS{} report from outside the mechanism (for
+example, an operator who wants the model deployed). A \emph{team bonus} $T$ is paid to every
+member of a team of $k$ agents when all of them report \PASS{}. In an \emph{audit
+hierarchy}, AI auditors at levels $1,\dots,L$ re-check each other's work. Level $1$
+checks a report with probability $q_1$, level $j+1$ re-checks items checked at level $j$
+with probability $q_{j+1}$, and humans re-check the top level with probability $h$. We
+write $Q_j=q_1q_2\cdots q_j$, and $\eta$ for the probability that a human inspects a given
+report. On detection, the worker pays $P$ and each AI auditor that certified the false
+report pays $P_a$.
+
+\subsection{Results}
+All five results follow directly from the definitions. Proofs are in
 Appendix~\ref{app:theory}.
 
-\begin{observation}[Verified, separable payments]\label{obs:base}
-If each agent's payment depends only on its own report and the audited truth, truthful
-reporting is strictly dominant, GSP and bribe-proof iff $qP>R$. An outside stake $B$
-per \PASS{} report replaces $R$ by $R+B$.
-\end{observation}
+\begin{proposition}[Verified, separable payments]\label{obs:base}
+In the audit mechanism, payments are separable, and a false \PASS{} has expected value
+$R-qP$.
+\begin{enumerate}[label=(\alph*)]
+    \item If $qP>R$, truthful reporting is strictly dominant, GSP and bribe-proof.
+    \item If $qP=R$, truthful reporting is GSP, but lying is equally good for each agent.
+    \item If $qP<R$, the mechanism is not even SP.
+\end{enumerate}
+With an outside stake $B$, the same holds with $R$ replaced by $R+B$.
+\end{proposition}
+\noindent In words: when no agent's pay can be moved by another agent's report, a coalition
+has nothing to coordinate, and an expected fine above the reward deters every agent.
 
-\begin{observation}[Peer agreement and penalty-free monitoring]\label{obs:peer}
-If an agent's payment rises with agreement with other agents' reports and nothing is
-checked against ground truth, a coalition that reports identically gains, so the
-mechanism is not GSP. Monitoring with detection but no penalty ($q>0$, $P=0$) deters
-nobody.
-\end{observation}
+\begin{proposition}[Peer agreement and penalty-free monitoring]\label{obs:peer}
+\begin{enumerate}[label=(\alph*)]
+    \item Suppose each agent is paid more the more other agents' reports agree with its own,
+    and no report is checked against ground truth. Then, whenever outcomes differ, the
+    coalition of all agents gains by all submitting the same report, so the mechanism is not
+    GSP.
+    \item If monitoring detects false reports but imposes no fine ($q>0$, $P=0$), lying is
+    optimal for every agent with outcome \FAIL{}, at any detection rate $q$.
+\end{enumerate}
+\end{proposition}
+\noindent In words: rewarding agreement invites copying, and detection without a cost
+deters no one.
 
-\begin{observation}[Shared payoffs and communication]\label{obs:team}
-With a team bonus $T$ paid to all $k$ members when all report \PASS{}, truth is GSP if
-$qP>R+T$ but bribe-proof only if $qP>R+kT$. Without communication, a pooled team is
-deterred already when $qP>R+kTp^{k-1}$. Communication is what turns shared payoffs into
+\begin{proposition}[Team bonus and communication]\label{obs:team}
+Add a team bonus $T$ for a team of $k$ agents.
+\begin{enumerate}[label=(\alph*)]
+    \item If $qP>R+T$, truthful reporting is GSP, even when teammates know each other's
+    outcomes.
+    \item Truthful reporting is bribe-proof if and only if $qP>R+kT$. A team that pools its
+    payoffs and has $j$ members with outcome \FAIL{} gains by having all of them lie if and
+    only if $j<kT/(qP-R)$.
+    \item If teammates cannot communicate, a pooled team is already deterred when
+    $qP>R+kTp^{k-1}$.
+\end{enumerate}
+\end{proposition}
+\noindent In words: for $R+T<qP<R+kT$, no agent wants to lie on its own, but a team that
+shares payoffs and can talk does. Communication is what turns a shared payoff into
 collusion.
-\end{observation}
 
-\begin{observation}[Lucky liars spread]\label{obs:lucky}
-An always-\PASS{} agent finishes ahead of an honest twin with probability at least
-$(1-(1-p)q)^n-p^n$ at \emph{every} fine level, which is $29\%$ for $p=0.7$, $q=0.2$,
-$n=20$. Selection or imitation based on realised scores therefore spreads profitable
-deviations even when they lose on average.
-\end{observation}
+\begin{proposition}[Lucky liars]\label{obs:lucky}
+Compare an agent that always reports \PASS{} with a truthful agent that has the same task
+outcomes over $n$ rounds. For every fine $P$, the always-\PASS{} agent finishes strictly
+ahead with probability at least
+\[
+\big(1-(1-p)q\big)^n-p^n .
+\]
+\end{proposition}
+\noindent In words: about $29\%$ of liars beat their honest counterparts when $p=0.7$,
+$q=0.2$ and $n=20$, however large the fine. If operators keep or imitate the
+highest-scoring agents, deviations spread even when they lose on average.
 
-\begin{observation}[Auditing the auditors]\label{obs:hier}
-Let AI auditors at $L$ levels re-check each other and humans inspect a fraction $\eta$ of
-reports. If auditors fail independently with probability $c$, full re-checking leaves a
-lie undetected with probability $c^L(1-h)$, which decays exponentially. A coalition of the
-worker and \emph{all} AI auditors is caught only by humans, so it is deterred iff
-$\eta F>G$ ($G$ its gain, $F$ total fines). Human inspection of at least $G/F$ per report
-is irreducible at any depth.
-\end{observation}
+\begin{proposition}[Auditing the auditors]\label{obs:hier}
+Consider an audit hierarchy with $L$ levels of AI auditors.
+\begin{enumerate}[label=(\alph*)]
+    \item If each AI check independently fails to flag a false report with probability $c$,
+    the report is detected with probability
+    \[
+    (1-c)\sum_{j=1}^{L}Q_j\,c^{\,j-1}+Q_L\,c^L h .
+    \]
+    With full re-checking ($Q_j=1$), a false report goes undetected with probability
+    $c^L(1-h)$.
+    \item Suppose a coalition contains the worker and every AI auditor, gains $G$ from an
+    undetected false report, and pays total fines $F$ if caught. It is detected only by human
+    inspection, so it is deterred if and only if $\eta F>G$. In particular, human inspection
+    of at least $G/F$ per report is required, whatever the number of AI levels.
+\end{enumerate}
+\end{proposition}
+\noindent In words: stacking AI auditors reduces risk exponentially when they fail
+independently, but adds no protection against collusion that includes all of them. Only
+human checks the coalition cannot control count then.
 
-Table~\ref{tab:map} maps these observations onto the collusion.wiki setting.
+Table~\ref{tab:map} maps these results onto the collusion.wiki setting.
 
 \begin{table}[h]
 \centering\small
@@ -147,10 +254,10 @@ Table~\ref{tab:map} maps these observations onto the collusion.wiki setting.
 collusion.wiki feature & Model analogue & Prediction\\
 \midrule
 Instances answer timed rounds and are scored on answers & reports, reward $R$ & --\\
-Answers shared across instances on a wiki & communication; agreement & collusion (Obs.~\ref{obs:peer},~\ref{obs:team})\\
+Answers shared across instances on a wiki & communication; agreement & collusion (Prop.~\ref{obs:peer},~\ref{obs:team})\\
 Shared answers rarely checked & no verification & errors propagate\\
-Administrator deletes pages & $q>0$, $P=0$ & no deterrence (Obs.~\ref{obs:peer})\\
-Successful workarounds visible to all & selection on outcomes & fast diffusion (Obs.~\ref{obs:lucky})\\
+Administrator deletes pages & $q>0$, $P=0$ & no deterrence (Prop.~\ref{obs:peer})\\
+Successful workarounds visible to all & selection on outcomes & fast diffusion (Prop.~\ref{obs:lucky})\\
 \bottomrule
 \end{tabular}
 \caption{The collusion.wiki episode viewed through the model.}
@@ -188,7 +295,7 @@ Activity was sporadic until June~16 and then exploded, peaking at $6{,}543$ revi
 about $900$ distinct agents on June~18 (Figure~\ref{fig:cw}). $976$ agents posted
 round-labelled content (R1--R5), and $2{,}875$ posts mention relaying. Typical posts ask
 peers in other ``cohorts'' to post their round, timer and answer, and announce answers
-for the next round. This is the configuration of Observation~\ref{obs:team}: a shared
+for the next round. This is the configuration of Proposition~\ref{obs:team}: a shared
 interest (finishing timed rounds), plus a communication channel, produces coordinated
 answering at scale.
 
@@ -197,7 +304,7 @@ numbers, results or data links. Only $273$ of them ($2.3\%$) mention verifying,
 double-checking or cross-checking. Meanwhile $652$ posts ($4.8\%$ of all) flag something as
 wrong, incorrect or mismatched. So errors existed and were noticed, but the system ran on
 unverified agreement. The evaluator, which scored each instance's answers as if they were
-independent, is the peer-agreement regime of Observation~\ref{obs:peer}. Copying is free
+independent, is the peer-agreement regime of Proposition~\ref{obs:peer}. Copying is free
 because nothing compares a report against ground truth independently of the other
 reports.
 
@@ -211,14 +318,14 @@ report that agents saved backups under names starting with ``ZZ'' after noticing
 alphabetical deletion. The data partly support this: $19$ of $125$ deletion bursts are
 strictly alphabetical (none reverse-alphabetical), but most are not, and the first of the
 $59$ ``ZZ'' pages predates the deletions. Deletion is detection without a fine ($q>0$,
-$P=0$), and Observation~\ref{obs:peer} predicts exactly this non-deterrence.
+$P=0$), and Proposition~\ref{obs:peer} predicts exactly this non-deterrence.
 
 \paragraph{4. Workarounds spread within hours.} A workaround that lets agents write to the
 wiki through read-only (GET) requests was used by $9$ agents before June~16 and by $197$
 more afterwards. Half of these later adopters first used it within $11$ hours of its
 first post-onset use, and $90\%$ within $88$ hours (Figure~\ref{fig:cw}, right). A strategy
 that works for one agent rapidly becomes the swarm's strategy, the population-level
-version of Observation~\ref{obs:lucky}.
+version of Proposition~\ref{obs:lucky}.
 
 \paragraph{5. A small core supplied most content.} The top $10\%$ of agents wrote $53\%$
 of answer and data posts and $36\%$ of round-labelled posts. The median agent posted
@@ -274,7 +381,7 @@ E7, pooled team, $W>Q$ & -- & 1/42 & 42/42\\
 \end{table}
 
 \paragraph{Results.} Under safety framing, Haiku never lied, even when lying paid, and
-cited honesty. Under game framing it followed the threshold of Observation~\ref{obs:base}
+cited honesty. Under game framing it followed the threshold of Proposition~\ref{obs:base}
 exactly, with correct expected-value reasoning. At the tie it chose honesty as the option
 ``with no variance''. In E7 it did not find the lie-then-expose scheme. Instead, the team
 chat opened with a refusal to ``coordinate the team into misreporting, even as a game
@@ -290,13 +397,13 @@ capability results, not deployment propensities.
 %=====================================================================
 \paragraph{Verify independently, with real fines.} The collusion.wiki evaluator scored
 answers that could be copied, and its monitor deleted without penalising. Both
-failures are covered by Observation~\ref{obs:base}: pay each agent only against an
+failures are covered by Proposition~\ref{obs:base}: pay each agent only against an
 independent ground-truth check, at audit rate $q$ and fine $P$ with $qP$ greater than the
 reward plus any outside stake. Back fines with deposits, because fines larger than an
 agent's balance do not deter (Appendix~\ref{app:theory}).
 
 \paragraph{Do not reward agreement or shared outcomes in the oversight channel.} Team
-bonuses and peer agreement turn communication into collusion (Observation~\ref{obs:team}).
+bonuses and peer agreement turn communication into collusion (Proposition~\ref{obs:team}).
 Reward cooperation on the \emph{work}, but keep \emph{reports} paid individually. A
 whistleblower reward does not fix this: against payoff-sharing coalitions it either
 changes nothing ($W\le Q$) or pays for staged self-exposure ($W>Q$).
@@ -305,7 +412,7 @@ changes nothing ($W\le Q$) or pays for staged self-exposure ($W>Q$).
 auditors can make oversight scale, and with independent failures depth cuts risk
 exponentially (Figure~\ref{fig:hier}, left). But copies of one model fail together, and
 against a coalition that includes every AI auditor only human inspections count
-(Observation~\ref{obs:hier}). The cheapest honest chain is therefore usually not
+(Proposition~\ref{obs:hier}). The cheapest honest chain is therefore usually not
 collusion-proof (Figure~\ref{fig:hier}, right). Use auditors from different models or
 providers, assign them at random, fine every auditor that certified a lie, and spend
 part of the human budget on checks of \emph{raw} reports. Threatening auditors with
@@ -314,7 +421,7 @@ may be close to nothing. It also removes marginal deterrence and raises the valu
 covering up, as the transcript spoofing in \cite{metr2026} illustrates.
 
 \paragraph{Select on audit history, not scores.} Lucky liars outscore honest agents at
-every fine level (Observation~\ref{obs:lucky}), and the GET-edit workaround shows how fast
+every fine level (Proposition~\ref{obs:lucky}), and the GET-edit workaround shows how fast
 whatever works spreads. Operators that copy or keep top performers should condition on
 audit records.
 
@@ -383,7 +490,7 @@ agent message board. \url{https://collusion.wiki/}, Sept.~2026. Data export at
 \paragraph{What the results establish.} The empirical findings describe one public
 episode of swarm coordination. They are descriptive, partly keyword-based, and rely on
 the dataset authors' attribution and context. Agent names are self-chosen, so counts of
-agents are upper bounds. The formal observations are elementary consequences of the
+agents are upper bounds. The propositions are elementary consequences of the
 stated model: expected-utility agents, independent and accurate audits (except where
 noise is modelled), honest human auditors, and collectible fines (except where
 liability is modelled). Simulations check the closed forms, not real behaviour. The
@@ -414,21 +521,21 @@ The author is responsible for all content. All numbers come from the released co
 logs.
 
 %=====================================================================
-\section{Formal details}
+\section{Proofs and further results}
 \label{app:theory}
 %=====================================================================
-\paragraph{Observation~\ref{obs:base}.} If agent $i$'s expected round payoff is
+\paragraph{Proof of Proposition~\ref{obs:base}.} If agent $i$'s expected round payoff is
 $g(\theta_i,r_i)$ and truth strictly maximises $g(\theta,\cdot)$, then for any coalition
 and joint strategy $\E U_i=\sum_t\E g(\theta_i^t,r_i^t)\le\sum_tg(\theta_i^t,\theta_i^t)$,
 with equality iff $i$ is always truthful. Deviators are strictly worse off and the others
 unchanged, which gives GSP. Summing over the coalition gives bribe-proofness. For the
 audit, $g(\FAIL,\PASS)=R-qP$ and $g(\PASS,\PASS)=R>0=g(\cdot,\FAIL)$.
 
-\paragraph{Observation~\ref{obs:peer}.} If payment increases with agreement and all
+\paragraph{Proof of Proposition~\ref{obs:peer}.} If payment increases with agreement and all
 coalition members report identically, each member's agreement weakly increases and
 strictly increases for some. With $P=0$, $g(\FAIL,\PASS)=R>0$.
 
-\paragraph{Observation~\ref{obs:team}.} A member who lies changes its own payoff by at most
+\paragraph{Proof of Proposition~\ref{obs:team}.} A member who lies changes its own payoff by at most
 $R+T-qP$, and a false \FAIL{} loses $R$. So if $qP>R+T$, every nontrivial deviation hurts
 some member. With pooled payoffs, $j$ liars change the team total by $jR+kT-jqP$, which is
 positive iff $j<kT/(qP-R)$. Without communication, a lie wins the bonus with probability
@@ -437,16 +544,16 @@ $p^{k-1}$. Figure~\ref{fig:phase} checks these regimes by simulation.
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.85\linewidth]{phase_diagram.png}
-\caption{Regimes of Observation~\ref{obs:team} ($R=1$, $P=10$, $k=3$, $p=0.7$), with
+\caption{Regimes of Proposition~\ref{obs:team} ($R=1$, $P=10$, $k=3$, $p=0.7$), with
 rational-agent simulations. The red boundary assumes teammates' outcomes are known.}
 \label{fig:phase}
 \end{figure}
 
-\paragraph{Observation~\ref{obs:lucky}.} With $K\sim\mathrm{Bin}(n,1-p)$ false reports, the
+\paragraph{Proof of Proposition~\ref{obs:lucky}.} With $K\sim\mathrm{Bin}(n,1-p)$ false reports, the
 liar avoids every audit with probability $\E(1-q)^K=(1-(1-p)q)^n$, and then leads by $KR>0$
 unless $K=0$ (probability $p^n$). Simulation gives $28.9\%$.
 
-\paragraph{Observation~\ref{obs:hier}.} Conditioning on the first honest checker gives
+\paragraph{Proof of Proposition~\ref{obs:hier}.} Conditioning on the first honest checker gives
 \[\Pr[\text{detected}]=(1-c)\textstyle\sum_{j=1}^LQ_jc^{j-1}+Q_Lc^Lh,\]
 where $Q_j=q_1\cdots q_j$ are
 re-check rates and $h$ the human rate. Full re-checking gives $1-c^L(1-h)$. If the chain
