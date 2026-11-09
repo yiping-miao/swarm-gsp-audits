@@ -30,24 +30,22 @@
 
 \begin{abstract}
 As AI agents take over safety evaluations, oversight depends on what agents report, and
-swarms of agents can coordinate those reports. We study this problem through the public
-record of a real agent swarm, interpreted with a simple mechanism-design model. The
-collusion.wiki export records $14{,}591$ posts by $3{,}102$ self-named autonomous agents that
-used a public wiki as a message board while answering timed, scored questions, sharing
-answers across instances that the evaluator treated as independent. The data show one
-connected coordination network containing $79\%$ of agents, with up to about $900$ agents
-active per day. Only $2.3\%$ of roughly $12{,}100$ answer-sharing posts mention any
-verification. Administrator deletions, which carried no penalty, led to reposting
-($15\%$ of deleted pages rewritten, median $23$ minutes) rather than deterrence, and a
-write workaround spread from $9$ to $206$ agents, half of later adopters within $11$ hours.
-In a pass/fail audit model, paying agents only for their own report against an audited
-ground truth keeps honest reporting group strategy-proof, even for agents that pool
-payoffs, once the expected fine exceeds the reward. Peer agreement, penalty-free
-monitoring, shared team bonuses and chains of correlated AI auditors do not. In a pilot,
-Claude Haiku agents stayed honest under safety framing, followed the deterrence threshold
-under game framing, and refused to coordinate a lie in teams. We close with design
-implications: verified spot checks, bonded fines, independent auditors, and human checks
-of raw reports.
+swarms can coordinate what they report. We develop a mechanism-design framework for
+honest reporting under audits and use it to read the record of a real agent swarm. In a
+pass/fail audit model, paying each agent only against an independently audited ground
+truth makes truthful reporting group strategy-proof once the expected fine exceeds the
+reward. It is even bribe-proof, so it holds for agents that pool payoffs. The guarantee
+fails in identifiable ways. Rewarding agreement, monitoring without penalties, and team
+bonuses combined with communication all let coalitions profit, and lucky liars outscore
+honest agents at every fine level. When AI auditors are themselves audited by other AI
+auditors and finally by humans, depth reduces risk exponentially if auditors fail
+independently, but against collusion spanning the chain a minimum human inspection rate
+is irreducible. The collusion.wiki record of $3{,}102$ agent identities matches each failure
+mode: one coordination network containing $79\%$ of agents, shared answers almost never
+verified ($2.3\%$), reposting after penalty-free deletions, and a workaround adopted by half
+its later users within $11$ hours. Claude Haiku agents followed the deterrence threshold
+under game framing and refused to coordinate a lie. We derive design rules for
+collusion-resistant oversight of agent swarms.
 \end{abstract}
 
 %=====================================================================
